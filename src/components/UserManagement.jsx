@@ -16,8 +16,11 @@ function UserManagement() {
   const fetchUsers = async () => {
     try {
       const response = await fetch('/api/users');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al cargar usuarios');
+      }
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Error al cargar usuarios');
       setUsers(data);
     } catch (err) {
       setError(err.message);
@@ -30,13 +33,15 @@ function UserManagement() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/users', {
+      const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newEmail, password: newPassword, username: newUsername, role: newRole }),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Error al agregar usuario');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al agregar usuario');
+      }
 
       setnewEmail('');
       setNewPassword('');
@@ -51,9 +56,15 @@ function UserManagement() {
   };
 
   const handleDeleteUser = async (id) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar a este usuario? Esta acción es irreversible.')) {
+        return;
+    }
     try {
-      const response = await fetch(`http://localhost:5000/api/users/${id}`, { method: 'DELETE' });
-      if (!response.ok) throw new Error('Error al eliminar usuario');
+      const response = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Error al eliminar usuario');
+      }
       await fetchUsers();
     } catch (err) {
       setError(err.message);
@@ -63,8 +74,8 @@ function UserManagement() {
   return (
     <div className="bg-pear-neutral p-6">
       <h2 className="text-2xl font-bold text-pear-dark-green mb-4">Gestión de Usuarios</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      <form onSubmit={handleAddUser} className="mb-6 space-y-4">
+      {error && <p className="text-red-500 bg-red-100 p-3 rounded mb-4">{error}</p>}
+      <form onSubmit={handleAddUser} className="mb-6 space-y-4 bg-white p-4 rounded-lg shadow">
         <div>
           <label className="block text-pear-dark">Correo Electrónico (Usuario)</label>
           <input
@@ -72,7 +83,7 @@ function UserManagement() {
             value={newEmail}
             onChange={(e) => setnewEmail(e.target.value)}
             placeholder="Ingrese el correo electrónico"
-            className="w-full p-2 border border-pear-green rounded"
+            className="w-full p-2 border border-gray-300 rounded"
             required
           />
         </div>
@@ -83,7 +94,7 @@ function UserManagement() {
             value={newUsername}
             onChange={(e) => setnewUsername(e.target.value)}
             placeholder="Ingrese el nombre"
-            className="w-full p-2 border border-pear-green rounded"
+            className="w-full p-2 border border-gray-300 rounded"
             required
           />
         </div>
@@ -93,7 +104,7 @@ function UserManagement() {
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-2 border border-pear-green rounded"
+            className="w-full p-2 border border-gray-300 rounded"
             required
           />
         </div>
@@ -102,7 +113,7 @@ function UserManagement() {
           <select
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="w-full p-2 border border-pear-green rounded"
+            className="w-full p-2 border border-gray-300 rounded"
           >
             <option value="admin">Admin</option>
             <option value="vendedor">Vendedor</option>
@@ -113,7 +124,7 @@ function UserManagement() {
         <button
           type="submit"
           disabled={loading}
-          className={`bg-pear-dark-green text-white p-2 rounded hover:bg-pear-green transition ${
+          className={`w-full bg-pear-dark-green text-white p-2 rounded hover:bg-opacity-80 transition ${
             loading ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
@@ -123,13 +134,14 @@ function UserManagement() {
 
       <ul className="space-y-2">
         {users.map((user) => (
-          <li key={user.id} className="flex justify-between items-center bg-white p-2 rounded">
-            <span>
-              {user.username} ({user.email}, {user.role})
-            </span>
+          <li key={user.id} className="flex justify-between items-center bg-white p-3 rounded shadow-sm">
+            <div>
+              <p className="font-semibold text-pear-dark">{user.username}</p>
+              <p className="text-sm text-gray-500">{user.email} - ({user.role})</p>
+            </div>
             <button
               onClick={() => handleDeleteUser(user.id)}
-              className="bg-red-500 text-white p-1 rounded hover:bg-red-600"
+              className="bg-red-500 text-white p-2 rounded hover:bg-red-600"
             >
               Eliminar
             </button>
