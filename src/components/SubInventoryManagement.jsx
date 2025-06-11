@@ -954,8 +954,6 @@ const SubInventoryManagement = ({ logMovement, setError, errorMessage, setShowIn
           </div>
         </div>
       )}
-      
-      
     </div>
   );
 };
