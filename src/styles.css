@@ -1,0 +1,251 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilos para react-resizable */
+.react-resizable {
+  position: relative;
+  box-sizing: border-box;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #000;
+  border-radius: 50%;
+  z-index: 10;
+  cursor: se-resize;
+}
+
+.react-resizable-handle-se {
+  bottom: -6px;
+  right: -6px;
+}
+
+.react-resizable-handle-sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.react-resizable-handle-ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.react-resizable-handle-nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+/* Asegura que los elementos sean visibles y no se oculten */
+.draggable-element {
+  transition: left 0.1s ease, top 0.1s ease;
+  position: absolute;
+  z-index: 6;
+}
+
+.sticker-container {
+  position: relative;
+  overflow: visible;
+}
+
+/* Forzar visibilidad del tooltip solo en hover */
+.group .tooltip {
+  display: none;
+}
+
+.group:hover .tooltip {
+  display: flex;
+}
+
+/* Variables CSS iniciales (pueden ser sobrescritas por Settings) */
+:root {
+  --theme-color: #ffffff;
+  --text-color: #FFFFFF;
+}
+
+/* Aplicar variables CSS a las clases de Tailwind */
+.bg-pear-dark-green {
+  background-color: var(--theme-color);
+}
+
+.text-pear-dark-green {
+  color: var(--theme-color);
+}
+
+.border-pear-green {
+  border-color: var(--theme-color);
+}
+
+.hover:bg-pear-green:hover {
+  background-color: var(--theme-color);
+}
+
+.text-white {
+  color: var(--text-color);
+}
+
+/* Estilos para Settings */
+.settings-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.settings-container h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--theme-color);
+}
+
+.settings-container label {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.settings-container input[type="color"] {
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.settings-container input[type="text"],
+.settings-container input[type="checkbox"] {
+  margin-right: 0.5rem;
+  color: var(--text-color);
+}
+/* Estilos para Settings */
+.settings-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  padding-top: 0px;
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-height: 80vh; /* Limita la altura al 80% de la ventana */
+  overflow-y: auto; /* Agrega desplazamiento vertical si el contenido es largo */
+}
+
+.settings-container h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: var(--theme-color);
+  display: flex;
+  align-items: center;
+  position: sticky; /* Fija el encabezado en la parte superior */
+  top: 0;
+  background-color: #fff; /* Fondo blanco para que el texto sea legible */
+  z-index: 10; /* Asegura que el encabezado esté por encima del contenido desplazable */
+  padding: 0.5rem 0; /* Espaciado interno */
+}
+
+.settings-container label {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color:#000000 var(--text-color);
+}
+
+.settings-container input[type="color"] {
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  cursor: pointer;
+}
+
+.settings-container input[type="text"],
+.settings-container input[type="checkbox"] {
+  margin-right: 0.5rem;
+  color: var(--text-color);
+}
+/* Ajustes para la barra lateral */
+.sidebar {
+  position: fixed;
+  top: 4rem; /* Debajo del header */
+  bottom: 0;
+  background-color: var(--theme-color);
+  color: var(--text-color);
+  transition: width 0.3s ease;
+  z-index: 40;
+  overflow-y: auto; /* Permitir desplazamiento vertical */
+  max-height: calc(100vh - 4rem); /* Ajustar altura restando el header */
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0.5rem;
+}
+
+.sidebar ul {
+  flex: 1;
+  space-y: 0.25rem;
+}
+
+.sidebar li button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar li button:hover {
+  background-color: var(--theme-color); /* Usar el color del tema */
+}
+
+.sidebar li button.active {
+  background-color: var(--theme-color);
+}
+
+.sidebar .settings-button {
+  margin-top: auto; /* Mantener al final si decides dejarlo abajo */
+}
+:root {
+  --background-color: #2E7D32; /* Valor por defecto */
+  --text-color: #FFFFFF; /* Valor por defecto */
+}
+
+body {
+  background-color: var(--background-color);
+  color:#000000 var(--text-color);
+}
+
+/* Ajustar componentes con fondos claros */
+.bg-light {
+  background-color: #ffffff; /* Fondo claro */
+  color: #000000; /* Texto negro, sobrescribe --text-color */
+}
+
+/* Ajustar componentes con fondos oscuros */
+.bg-dark {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Revisar si los elementos heredan el color */
+p, h1, h2, h3, h4, h5, h6, span, div, button, a {
+  color: inherit;
+}
+.bg-white {
+    --tw-bg-opacity: 1;
+    background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1));
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+.sticky {
+    position: sticky;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}

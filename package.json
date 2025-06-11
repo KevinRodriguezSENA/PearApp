@@ -1,0 +1,79 @@
+{
+  "name": "pearapp",
+  "version": "1.0.0",
+  "description": "Sistema de inventario de sandalias y ropa",
+  "author": "Xavier",
+  "main": "main.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "electron": "electron .",
+    "electron-pack": "electron-builder",
+    "server": "cd server && node index.js",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "client": "react-scripts start",
+    "dist": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "autoprefixer": "^10.4.20",
+    "axios": "^1.9.0",
+    "bcryptjs": "^3.0.2",
+    "chart.js": "^4.4.9",
+    "electron-is-dev": "^3.0.1",
+    "html-to-image": "^1.11.13",
+    "jsbarcode": "^3.12.1",
+    "lucide-react": "^0.511.0",
+    "node-thermal-printer": "^4.4.5",
+    "postcss": "^8.4.41",
+    "react": "^18.3.1",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.3.1",
+    "react-draggable": "^4.4.6",
+    "react-modal": "^3.16.3",
+    "react-pro-sidebar": "^1.1.0",
+    "react-resizable": "^3.0.5",
+    "react-router-dom": "^7.6.1",
+    "serverless-http": "^3.2.0",
+    "tailwindcss": "^3.4.10"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
+    "electron-reload": "^2.0.0-alpha.1",
+    "react-scripts": "^5.0.1",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.pearapp",
+    "productName": "PearApp",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "server/**/*",
+      "public/preload.js",
+      "src/**/*",
+      "main.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

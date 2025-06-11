@@ -1,0 +1,11 @@
+# netlify.toml
+
+[build]
+  command = "npm run build" # El comando para construir tu app React
+  publish = "build"         # La carpeta que se va a desplegar
+  functions = "netlify/functions" # La carpeta de tus Netlify Functions
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
