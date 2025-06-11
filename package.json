@@ -16,6 +16,7 @@
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.50.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
