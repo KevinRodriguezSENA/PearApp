@@ -1,164 +1,171 @@
-// src/components/SubInventoryManagement.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
+import JsBarcode from 'jsbarcode';
+import { toPng } from 'html-to-image';
 import supabase from '../supabaseClient';
-import axios from 'axios';
-import BarcodeGeneratorModal from './BarcodeGeneratorModal';
 
-const updateStockInWooCommerce = async (sku, quantity) => {
-  // Esta función no necesita cambios.
-};
-
-const SubInventoryManagement = ({ logMovement, setError, errorMessage, user }) => {
-  // Tus estados existentes
-  const [barcode, setBarcode] = useState('');
-  const [mode, setMode] = useState('Off');
-  const [groupedProducts, setGroupedProducts] = useState([]);
-  const [filteredGroupedProducts, setFilteredGroupedProducts] = useState([]);
-  const [filters, setFilters] = useState({ search: '', size: '', created_at: '' });
-  const [sortConfig, setSortConfig] = useState({ key: 'reference', direction: 'asc' });
-  const [showPopup, setShowPopup] = useState(false);
-  const [newReference, setNewReference] = useState({
-    image_url: '', reference: '', color: '',
-    sizes: { 34: 0, 35: 0, 36: 0, 37: 0, 38: 0, 39: 0, 40: 0, 41: 0 },
-    price_r: 'Precio detal', price_w: 'Precio mayorista',
-    created_at: new Date().toISOString(), created_by: user ? user.id : null,
-  });
-  const [editingGroup, setEditingGroup] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
-  const sizes = ['34', '35', '36', '37', '38', '39', '40', '41'];
-  const barcodeInputRef = useRef(null);
-  
-  // Nuevo estado para controlar el modal
-  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
+const BarcodeGeneratorModal = ({ show, onClose }) => {
+  const [products, setProducts] = useState([]);
+  const [filters, setFilters] = useState({ reference: '', color: '', size: '' });
+  const [filteredOptions, setFilteredOptions] = useState({ colors: [], sizes: [] });
+  const [selectedVariation, setSelectedVariation] = useState(null);
+  const barcodeContainerRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchInventory();
-    if (barcodeInputRef.current) barcodeInputRef.current.focus();
-  }, []);
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from('products')
+          .select('id, reference, variations(id, color, size, barcode_code)');
+        
+        if (fetchError) throw fetchError;
+        setProducts(data || []);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setError("No se pudieron cargar los productos.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (show) {
+      fetchInitialData();
+    }
+  }, [show]);
 
   useEffect(() => {
-    applyFiltersAndSorting();
-  }, [groupedProducts, sortConfig, filters]);
-
-  const fetchInventory = async () => {
-    // Tu función fetchInventory existente
-  };
-
-  const applyFiltersAndSorting = () => {
-    // Tu función applyFiltersAndSorting existente
-  };
+    setSelectedVariation(null);
+    if (filters.reference) {
+      const product = products.find(p => p.reference === filters.reference);
+      const uniqueColors = product ? [...new Set(product.variations.map(v => v.color))].sort() : [];
+      setFilteredOptions({ colors: uniqueColors, sizes: [] });
+      setFilters(f => ({ ...f, color: '', size: '' }));
+    } else {
+      setFilteredOptions({ colors: [], sizes: [] });
+    }
+  }, [filters.reference, products]);
   
-  const handleSaveReference = async () => {
-    // Tu función handleSaveReference existente (ya genera el barcode_code, está bien)
+  useEffect(() => {
+    setSelectedVariation(null);
+    if (filters.color) {
+      const product = products.find(p => p.reference === filters.reference);
+      const availableSizes = product ? product.variations
+          .filter(v => v.color === filters.color)
+          .map(v => v.size)
+          .sort((a, b) => a - b) : [];
+      setFilteredOptions(o => ({ ...o, sizes: availableSizes }));
+    } else {
+       setFilteredOptions(o => ({ ...o, sizes: [] }));
+    }
+    setFilters(f => ({ ...f, size: '' }));
+  }, [filters.color, filters.reference]);
+
+  useEffect(() => {
+    if (selectedVariation && barcodeContainerRef.current) {
+      barcodeContainerRef.current.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      barcodeContainerRef.current.appendChild(svg);
+      try {
+        JsBarcode(svg, selectedVariation.barcode_code, {
+          format: 'CODE128',
+          height: 80, width: 2, fontSize: 18, margin: 10,
+          displayValue: true,
+        });
+      } catch (e) {
+        barcodeContainerRef.current.innerHTML = `<p class="text-red-500">Error: Valor inválido para código de barras.</p>`;
+      }
+    } else if (barcodeContainerRef.current) {
+      barcodeContainerRef.current.innerHTML = '';
+    }
+  }, [selectedVariation]);
+
+  const handleFilterChange = (e) => setFilters(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleGenerate = () => {
+    if (!filters.reference || !filters.color || !filters.size) {
+      alert("Por favor, seleccione una referencia, color y talla.");
+      return;
+    }
+    const product = products.find(p => p.reference === filters.reference);
+    const variation = product?.variations.find(v => v.color === filters.color && v.size === filters.size);
+    
+    if (variation?.barcode_code) {
+      setSelectedVariation(variation);
+    } else {
+      alert("No se encontró la variación o no tiene un código de barras asociado.");
+      setSelectedVariation(null);
+    }
   };
 
-  const handleFilterChange = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
-  const handleClearFilters = () => setFilters({ search: '', size: '', created_at: '' });
-  const handleSort = (key) => setSortConfig(prev => ({ key, direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc' }));
-  const handleBarcodeChange = async (e) => {
-    // Tu lógica de Cargar/Descargar por escáner
+  const handleDownload = () => {
+    if (barcodeContainerRef.current?.firstChild) {
+      toPng(barcodeContainerRef.current, { cacheBust: true, backgroundColor: 'white' })
+        .then((dataUrl) => {
+          const link = document.createElement('a');
+          link.download = `${selectedVariation.barcode_code}.png`;
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch(err => console.error("Error al descargar la imagen:", err));
+    }
   };
-  const handleDeleteReference = async (productId, reference) => {
-    // Tu lógica de eliminar
+
+  const handlePrint = () => {
+    if (selectedVariation && window.electronAPI) {
+      window.electronAPI.printSticker({
+        reference: filters.reference,
+        color: filters.color,
+        size: filters.size,
+        barcode: selectedVariation.barcode_code,
+      });
+    }
   };
+
+  if (!show) return null;
+  const uniqueReferences = [...new Set(products.map(p => p.reference))].sort();
 
   return (
-    <>
-      <div className="bg-pear-neutral p-6">
-        <h1 className="text-2xl font-bold text-pear-dark-green mb-4">Gestión de Inventarios</h1>
-        
-        {/* Tu sección de escaneo */}
-        <div className="flex items-center mb-4 space-x-4">
-            <div className="flex-1">
-                <input
-                    type="text" value={barcode} onChange={handleBarcodeChange}
-                    placeholder="Escanea el código (referencia-color-talla)"
-                    className="w-full p-2 border rounded" ref={barcodeInputRef}
-                />
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl">
+        <h2 className="text-2xl font-bold mb-4 text-pear-dark">Generar Código de Barras</h2>
+        {loading && <p>Cargando datos...</p>}
+        {error && <p className="text-red-500">{error}</p>}
+        {!loading && !error && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <select name="reference" value={filters.reference} onChange={handleFilterChange} className="p-2 border rounded">
+                <option value="">-- Referencia --</option>
+                {uniqueReferences.map(ref => <option key={ref} value={ref}>{ref}</option>)}
+              </select>
+              <select name="color" value={filters.color} onChange={handleFilterChange} className="p-2 border rounded" disabled={!filters.reference}>
+                <option value="">-- Color --</option>
+                {filteredOptions.colors.map(color => <option key={color} value={color}>{color}</option>)}
+              </select>
+              <select name="size" value={filters.size} onChange={handleFilterChange} className="p-2 border rounded" disabled={!filters.color}>
+                <option value="">-- Talla --</option>
+                {filteredOptions.sizes.map(size => <option key={size} value={size}>{size}</option>)}
+              </select>
             </div>
-            <div className="flex space-x-2">
-                {['Cargar', 'Off', 'Descargar'].map(option => (
-                    <button key={option} onClick={() => setMode(option)}
-                        className={`px-4 py-2 rounded ${mode === option ? 'bg-pear-dark-green text-white' : 'bg-gray-200'}`}>
-                        {option}
-                    </button>
-                ))}
+            
+            <button onClick={handleGenerate} className="w-full bg-blue-600 text-white p-3 rounded-lg mb-4">Generar / Ver Código</button>
+
+            <div ref={barcodeContainerRef} className="text-center p-4 border-dashed border-2 rounded-lg min-h-[120px] flex items-center justify-center">
+              {!selectedVariation && <p className="text-gray-500">Seleccione para ver el código.</p>}
             </div>
-        </div>
 
-        {/* Tus botones de acción, incluyendo el nuevo */}
-        <div className="flex flex-wrap justify-between items-center mb-4 gap-4">
-          <button onClick={() => { setEditingGroup(null); setNewReference({ image_url: '', reference: '', color: '', sizes: { '34':0,'35':0,'36':0,'37':0,'38':0,'39':0,'40':0,'41':0 }, price_r: 'Precio detal', price_w: 'Precio mayorista', created_at: new Date().toISOString(), created_by: user ? user.id : null }); setShowPopup(true); }} className="bg-pear-dark-green text-white p-2 rounded hover:bg-opacity-80 transition">
-            Agregar Referencia
-          </button>
-          
-          <button onClick={() => setShowBarcodeModal(true)} className="bg-purple-600 text-white p-2 rounded hover:bg-purple-700 transition">
-            Generar/Ver Códigos de Barras
-          </button>
-
-          <button onClick={() => setShowFilters(!showFilters)} className="bg-gray-300 text-pear-dark p-2 rounded hover:bg-gray-400 transition">
-            {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-          </button>
-        </div>
-
-        {/* ... El resto de tu componente (filtros, tabla, etc.) ... */}
-         {showFilters && (
-          <div className="flex flex-wrap justify-between mb-4 gap-2">
-            <div className="flex items-center space-x-2">
-              <input type="text" name="search" placeholder="Filtrar por Referencia o Color" value={filters.search} onChange={handleFilterChange} className="p-2 border rounded w-64"/>
-              <input type="text" name="size" placeholder="Filtrar Talla" value={filters.size} onChange={handleFilterChange} className="p-2 border rounded"/>
-              <input type="date" name="created_at" value={filters.created_at} onChange={handleFilterChange} className="p-2 border rounded"/>
-              <button onClick={handleClearFilters} className="bg-gray-300 px-4 py-2 rounded">Limpiar</button>
+            <div className="flex justify-end space-x-4 mt-6">
+              <button onClick={handleDownload} disabled={!selectedVariation} className="bg-green-600 text-white px-5 py-2 rounded-lg disabled:bg-gray-400">Descargar</button>
+              <button onClick={handlePrint} disabled={!selectedVariation} className="bg-pear-dark-green text-white px-5 py-2 rounded-lg disabled:bg-gray-400">Imprimir</button>
+              <button onClick={onClose} className="bg-gray-500 text-white px-5 py-2 rounded-lg">Cerrar</button>
             </div>
-          </div>
+          </>
         )}
-
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse bg-white rounded-lg shadow-md">
-            <thead>
-                <tr className="bg-pear-green text-white">
-                    <th className="border p-2">Imagen</th>
-                    <th className="border p-2 cursor-pointer" onClick={() => handleSort('reference')}>Referencia</th>
-                    <th className="border p-2 cursor-pointer" onClick={() => handleSort('color')}>Color</th>
-                    {sizes.map(size => <th key={size} className="border p-2 text-center">{size}</th>)}
-                    <th className="border p-2">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {filteredGroupedProducts.map((group, index) => (
-                <tr key={index} className="border-t">
-                    <td className="border p-2">
-                      <img src={group.image_url || 'https://placehold.co/48x48/EFEFEF/AAAAAA&text=No+Img'} alt={group.reference} className="w-12 h-12 object-cover" />
-                    </td>
-                    <td className="border p-2">{group.reference}</td>
-                    <td className="border p-2">{group.color}</td>
-                    {sizes.map((size) => (
-                    <td key={size} className="border p-2 text-center">{group.sizes[size] || 0}</td>
-                    ))}
-                    <td className="border p-2">
-                    <button onClick={() => { setEditingGroup(group); setNewReference({ ...group, sizes: { ...newReference.sizes, ...group.sizes } }); setShowPopup(true); }} className="bg-blue-500 text-white px-2 py-1 rounded">
-                        Editar
-                    </button>
-                    </td>
-                </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
       </div>
-
-      {/* Renderizado del nuevo modal */}
-      <BarcodeGeneratorModal show={showBarcodeModal} onClose={() => setShowBarcodeModal(false)} />
-
-      {/* Tu modal existente para agregar/editar referencias */}
-      {showPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          {/* ... contenido del popup ... */}
-        </div>
-      )}
-    </>
+    </div>
   );
 };
 
-export default SubInventoryManagement;
+export default BarcodeGeneratorModal;
