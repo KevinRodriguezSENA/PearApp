@@ -659,13 +659,9 @@ const SubInventoryManagement = ({ logMovement, setError, errorMessage, setShowIn
         >
           Agregar Nueva Referencia
         </button>
-        {/* Button to open the barcode modal */}
-        <button
-          onClick={handleOpenBarcodeModal}
-          className="bg-pear-dark-green text-white p-2 rounded hover:bg-pear-green transition"
-        >
-          Generar Códigos de Barras
-        </button>
+       <button onClick={() => setShowBarcodeModal(true)} className="bg-purple-600 text-white p-2 rounded hover:bg-purple-700">
+            Generar/Ver Códigos de Barras
+          </button>
         <button
           onClick={() => { setShowInventoryScan(true); fetchInventory(); }}
           className="bg-pear-dark-green text-white p-2 rounded hover:bg-pear-green transition"
