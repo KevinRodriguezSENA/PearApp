@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../supabaseClient';
 import axios from 'axios';
-import BarcodeGenerator from './BarcodeGenerator'; // Import the new component
-
+import BarcodeGeneratorModal from './BarcodeGeneratorModal';
 const updateStockInWooCommerce = async (sku, quantity) => {
   const consumerKey = "ck_1da9c643baaf2414a6732c59aaada69eb259ba2b";
   const consumerSecret = "cs_58610e3246226199099e8d6b3705e2812300b9aa";
